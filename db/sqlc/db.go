@@ -9,23 +9,31 @@ import (
 	"database/sql"
 )
 
+// DBTX là interface định nghĩa các phương thức cơ bản để thao tác với database
 type DBTX interface {
+	// ExecContext thực thi truy vấn SQL không trả về hàng (INSERT, UPDATE, DELETE)
 	ExecContext(context.Context, string, ...interface{}) (sql.Result, error)
+	// PrepareContext chuẩn bị một truy vấn SQL để tái sử dụng
 	PrepareContext(context.Context, string) (*sql.Stmt, error)
+	// QueryContext thực thi truy vấn trả về nhiều hàng (SELECT)
 	QueryContext(context.Context, string, ...interface{}) (*sql.Rows, error)
+	// QueryRowContext thực thi truy vấn trả về tối đa một hàng
 	QueryRowContext(context.Context, string, ...interface{}) *sql.Row
 }
 
+// New tạo một instance Queries mới với kết nối database được cung cấp
 func New(db DBTX) *Queries {
 	return &Queries{db: db}
 }
 
+// Queries là struct chứa đối tượng database để thực thi các truy vấn SQL
 type Queries struct {
-	db DBTX
+	db DBTX // Lưu trữ kết nối database hoặc transaction
 }
 
+// WithTx tạo một instance Queries mới sử dụng transaction (*sql.Tx)
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db: tx,
+		db: tx, // Gán transaction để thực thi truy vấn trong phạm vi transaction
 	}
 }
